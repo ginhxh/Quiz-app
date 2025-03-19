@@ -207,68 +207,155 @@ const tictok = document.querySelector(".tictok");
 const content = document.querySelector(".content");
 const choics = document.querySelector(".choics");
 const next = document.querySelector(".next");
-
+const id = document.querySelector(".id");
+const choixx = document.querySelectorAll(".choix");
+let inerval;
 let curent = 0;
 let curentt;
-
-const creatLi = (qst) => {
-  choics.innerHTML = "";
-  qst.qestins[curent].annswers.forEach((answer) => {
-    const answerButton = document.createElement("button");
-    answerButton.textContent = answer;
-    answerButton.classList.add("choix");
-    choics.append(answerButton);
-  });
-};
-const showQwiz = () => {
-  const qstion = qstions.find(
-    (qst) => category.toLowerCase() === qst.gener.toLowerCase()
-  );
-  if (qstion) {
-    curentt = qstions.indexOf(qstion);
-    console.log(curentt);
-    content.textContent = qstion.qestins[curent].qston;
-    totalQst.textContent = qstion.totalQuestion;
-    courentQst.textContent = curent + 1;
-    creatLi(qstion);
-    const calc = ((curent + 1) / qstion.totalQuestion) * 100;
-    bar.style.width = `${calc}%`;
-  }
-};
-const moveQuestio = () => {
-  curent++;
-  if (curent < qstions[curentt].qestins.length) {
-    showQwiz();
-  } else {
-    next.disabled = true;
-    content.textContent = "Quiz completed!";
-    choics.innerHTML = `<button><a href="index.html">Go home</a></button>`;
-  }
-};
-
-const disbledAnswers = () => {
-  const choic = choics.querySelectorAll(".choix");
-  choic.forEach((choix) => {
-    choix.disabled = true;
-  });
-};
-const checkanwers = () => {
-  choics.addEventListener("click", (e) => {
-    if (e.target.classList.contains("choix")) {
-      const selectedAnswer = e.target.textContent.toLowerCase();
-      const correctAnswer =
-        qstions[curentt].qestins[curent].answer.toLowerCase();
-      if (selectedAnswer == correctAnswer) {
-        e.target.classList.add("green");
-      } else {
-        console.log(correctAnswer);
-        console.log(selectedAnswer);
-        e.target.classList.add("red");
-      }
-      disbledAnswers();
+let time = 20;
+let correct = 0;
+let userANswers = [];
+const disbaledBtns = (answer) => {
+  document.querySelectorAll(".choix").forEach((answr) => {
+    answr.disabled = true;
+    if (answr.textContent.toLowerCase() === answer) {
+      answr.classList.add("green");
     }
   });
 };
-showQwiz();
-checkanwers();
-next.addEventListener("click", moveQuestio);
+const removeAll = () => {
+  choixx.forEach((choi) => {
+    choi.classList.remove("red");
+    choi.classList.remove("green");
+    choi.disabled = false;
+  });
+};
+
+const creatChoices = (qst) => {
+  choics.innerHTML = "";
+  for (let i = 0; i < qst.qestins[curent].annswers.length; i++) {
+    const choix = document.createElement("button");
+
+    choix.textContent = qst.qestins[curent].annswers[i];
+    choix.classList.add("choix");
+    choics.append(choix);
+    removeAll();
+  }
+};
+const creatInterval = () => {
+  if (inerval) {
+    clearInterval(inerval);
+  }
+  inerval = setInterval(() => {
+    if (time > 0) {
+      time--;
+      next.disabled = true;
+      next.style.background = "gray";
+      tictok.textContent = time;
+    } else {
+      const answer = qstions[curentt].qestins[curent].answer.toLowerCase();
+      next.disabled = false;
+      next.style.background = "#fa5519";
+
+      disbaledBtns(answer);
+    }
+  }, 1000);
+};
+const displayQuestion = () => {
+  const quest = qstions.find(
+    (qstion) => qstion.gener.toLowerCase() === category.toLowerCase()
+  );
+  if (quest) {
+    totalQst.textContent = quest.totalQuestion;
+    courentQst.textContent = curent + 1;
+    let barPro = ((curent + 1) / quest.totalQuestion) * 100;
+    bar.style.width = `${barPro}%`;
+    content.textContent = quest.qestins[curent].qston;
+    id.value = qstions.indexOf(quest);
+    curentt = id.value;
+    creatChoices(quest);
+    creatInterval();
+  }
+};
+displayQuestion();
+
+const moveQuiz = () => {
+  if (curent < qstions[curentt].qestins.length - 1) {
+    curent++;
+    time = 20;
+    displayQuestion();
+    console.log(curent);
+  } else {
+    next.disabled = true;
+    giveResultat();
+    console.log(curent);
+    console.log("done");
+    console.log(userANswers);
+  }
+};
+next.addEventListener("click", moveQuiz);
+
+const checkAnswer = () => {
+  choics.addEventListener("click", (e) => {
+    if (e.target.classList.contains("choix")) {
+      const userAnswer = e.target.textContent.toLowerCase();
+      const answer = qstions[curentt].qestins[curent].answer.toLowerCase();
+      disbaledBtns(answer);
+      clearInterval(inerval);
+      next.disabled = false;
+      next.style.background = "#fa5519";
+
+      userANswers.push(userAnswer);
+      if (userAnswer === answer) {
+        e.target.classList.add("green");
+        correct++;
+      } else {
+        e.target.classList.add("red");
+      }
+      console.log(answer);
+      console.log(choics);
+    } else {
+    }
+  });
+};
+
+checkAnswer();
+
+const giveResultat = () => {
+  document.querySelector(".qwz").innerHTML = "";
+  document.querySelector(".qwz").style.display = "none";
+  document.querySelector(".qwzs").style.display = "";
+  document.querySelector(".qwzs").innerHTML = `
+      <h2>Your Results</h2>
+      <div class="result">
+        <div class="srs">
+          <h3>Your answer</h3>
+          <ul class="UserAnwr">
+            
+          </ul>
+        </div>
+        <div class="srs">
+          <h3>Correct answer</h3>
+          <ul class="UserAnwr realANswe">
+            
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="well"> You answerd ${correct}  of ${qstions[curentt].totalQuestion} </h3>
+
+            <button class="gg"><a href="index.html">Back to home</a></button>
+
+    `;
+
+  userANswers.forEach((answer) => {
+    const li = document.createElement("li");
+    li.textContent = answer;
+    document.querySelector(".UserAnwr").append(li);
+  });
+  qstions[curentt].qestins.forEach((qst) => {
+    const li = document.createElement("li");
+    li.textContent = qst.answer;
+    document.querySelector(".realANswe").append(li);
+  });
+};
